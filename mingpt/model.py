@@ -112,7 +112,7 @@ class GPT(nn.Module):
         C.attn_pdrop = 0.1
         return C
 
-    def __init__(self, config):
+    def __init__(self, config, checkpoint_path = None):     ############################################ADDED################################
         super().__init__()
         assert config.vocab_size is not None
         assert config.block_size is not None
@@ -150,11 +150,18 @@ class GPT(nn.Module):
         ))
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
-        # init all weights, and apply a special scaled init to the residual projections, per GPT-2 paper
-        self.apply(self._init_weights)
-        for pn, p in self.named_parameters():
-            if pn.endswith('c_proj.weight'):
-                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layer))
+        ###########################################################ADDED###################################################
+        if checkpoint_path is not None:
+            # Load the model state dictionary from the checkpoint
+            checkpoint = torch.load(checkpoint_path)
+            self.load_state_dict(checkpoint)
+        ###########################################################ADDED###################################################
+
+        else: # init all weights, and apply a special scaled init to the residual projections, per GPT-2 paper
+            self.apply(self._init_weights)
+            for pn, p in self.named_parameters():
+                if pn.endswith('c_proj.weight'):
+                    torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layer))
 
         # report number of parameters (note we don't count the decoder parameters in lm_head)
         n_params = sum(p.numel() for p in self.transformer.parameters())

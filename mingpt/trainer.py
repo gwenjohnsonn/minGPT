@@ -78,6 +78,12 @@ class Trainer:
         self.iter_num = 0
         self.iter_time = time.time()
         data_iter = iter(train_loader)
+
+        ########################################################ADDED######################################################################
+        checkpoint_frequency = 500  # Save checkpoint every 1000 iterations
+        checkpoint_dir = 'mingpt' # Specify the directory where you want to save the checkpoints
+        ########################################################ADDED######################################################################
+
         while True:
 
             # fetch the next batch (x, y) and re-init iterator if needed
@@ -103,6 +109,12 @@ class Trainer:
             tnow = time.time()
             self.iter_dt = tnow - self.iter_time
             self.iter_time = tnow
+
+            ########################################################ADDED######################################################################
+            if self.iter_num % checkpoint_frequency == 0:
+                checkpoint_path = f'{checkpoint_dir}/checkpoint_{self.iter_num}.pt'
+                torch.save(model.state_dict(), checkpoint_path)
+            ########################################################ADDED######################################################################
 
             # termination conditions
             if config.max_iters is not None and self.iter_num >= config.max_iters:
